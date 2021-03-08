@@ -2,8 +2,10 @@
 
 <project name="VisualizerTask" default="help">
 
-    <target name="setup" depends="composer:install" description="Prepare project for development"/>
-    <target name="qa" depends="composer:validate, phpstan:analyse" description="Check code quality"/>
+    <target name="setup" depends="composer:install"
+            description="Prepare project for development"/>
+    <target name="qa" description="Check code quality"
+            depends="composer:validate, composer:normalize, phpstan:analyse"/>
 
     <target name="help">
         <exec executable="xdg-open" spawn="true">
@@ -12,7 +14,7 @@
     </target>
 
     <target name="visualizer" description="Create buildfile diagram">
-        <visualizer format="puml"/>
+        <visualizer format="png"/>
     </target>
 
     <target name="composer:normalize" description="Normalize composer.json content">
@@ -36,7 +38,7 @@
 
     <target name="phpstan:analyse" description="Static code analysis">
         <exec executable="vendor/bin/phpstan" passthru="true" checkreturn="true">
-            <arg line="--level=max"/>
+            <arg line="--level=max --no-progress --ansi --no-interaction"/>
             <arg value="analyse"/>
             <arg path="src"/>
         </exec>
