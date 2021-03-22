@@ -26,7 +26,9 @@ use Phing\Io\FileReader;
 use Phing\Io\FileWriter;
 use Phing\Io\File;
 use Phing\Project;
+use function array_reduce;
 use function Jawira\PlantUml\encodep;
+use function reset;
 
 /**
  * Class VisualizerTask
@@ -126,20 +128,23 @@ class VisualizerTask extends HttpTask
      */
     protected function generatePuml(array $buildFiles): string
     {
-        $puml = $this->transformToPuml(reset($buildFiles), VisualizerTask::XSL_HEADER);
-
-        /**
-         * @var \Phing\Io\File $buildFile
-         */
-        foreach ($buildFiles as $buildFile) {
-            $puml .= $this->transformToPuml($buildFile, VisualizerTask::XSL_TARGETS);
+        if (!($firstBuildFile = reset($buildFiles))) {
+            $exceptionMessage = 'No buildfile to process';
+            $this->log($exceptionMessage, Project::MSG_ERR);
+            throw new BuildException($exceptionMessage);
         }
 
-        foreach ($buildFiles as $buildFile) {
-            $puml .= $this->transformToPuml($buildFile, VisualizerTask::XSL_CALLS);
-        }
+        $puml = $this->transformToPuml($firstBuildFile, VisualizerTask::XSL_HEADER);
 
-        $puml .= $this->transformToPuml(reset($buildFiles), VisualizerTask::XSL_FOOTER);
+        $puml = array_reduce($buildFiles, function (\Phing\Io\File $buildFile) {
+            return $this->transformToPuml($buildFile, VisualizerTask::XSL_CALLS);
+        }, $puml);
+
+        $puml = array_reduce($buildFiles, function (\Phing\Io\File $buildFile) {
+            return $this->transformToPuml($buildFile, VisualizerTask::XSL_TARGETS);
+        }, $puml);
+
+        $puml .= $this->transformToPuml($firstBuildFile, VisualizerTask::XSL_FOOTER);
 
         return $puml;
     }
@@ -176,9 +181,9 @@ class VisualizerTask extends HttpTask
         $xml = simplexml_load_string($xmlContent);
 
         if (!($xml instanceof \SimpleXMLElement)) {
-            $message = "Error loading XML file: $xmlFile";
-            $this->log($message, Project::MSG_ERR);
-            throw new BuildException($message);
+            $exceptionMessage = "Error loading XML file: $xmlFile";
+            $this->log($exceptionMessage, Project::MSG_ERR);
+            throw new BuildException($exceptionMessage);
         }
 
         return $xml;
@@ -225,10 +230,9 @@ class VisualizerTask extends HttpTask
                 $this->format = $format;
                 break;
             default:
-                $message = "'$format' is not a valid format";
-                $this->log($message, Project::MSG_ERR);
-                throw new BuildException($message);
-                break;
+                $exceptionMessage = "'$format' is not a valid format";
+                $this->log($exceptionMessage, Project::MSG_ERR);
+                throw new BuildException($exceptionMessage);
         }
 
         return $this;
@@ -279,9 +283,9 @@ class VisualizerTask extends HttpTask
 
         // Check if path is available
         if (!is_dir(dirname($destination))) {
-            $message = "Directory '$destination' is invalid";
-            $this->log($message, Project::MSG_ERR);
-            throw new BuildException(sprintf($message, $destination));
+            $exceptionMessage = "Directory '$destination' is invalid";
+            $this->log($exceptionMessage, Project::MSG_ERR);
+            throw new BuildException(sprintf($exceptionMessage, $destination));
         }
 
         return $destination;
@@ -327,9 +331,9 @@ class VisualizerTask extends HttpTask
 
         $server = filter_var($server, FILTER_VALIDATE_URL);
         if ($server === false) {
-            $message = 'Invalid PlantUml server';
-            $this->log($message, Project::MSG_ERR);
-            throw new BuildException($message);
+            $exceptionMessage = 'Invalid PlantUml server';
+            $this->log($exceptionMessage, Project::MSG_ERR);
+            throw new BuildException($exceptionMessage);
         }
 
         $imageUrl = sprintf('%s/%s/%s', rtrim($server, '/'), $format, $encodedPuml);
@@ -374,9 +378,9 @@ class VisualizerTask extends HttpTask
         $this->log("Response reason: $reasonPhrase", Project::MSG_DEBUG);
 
         if ($status !== VisualizerTask::STATUS_OK) {
-            $message = "Request unsuccessful. Response from server: $status $reasonPhrase";
-            $this->log($message, Project::MSG_ERR);
-            throw new BuildException($message);
+            $exceptionMessage = "Request unsuccessful. Response from server: $status $reasonPhrase";
+            $this->log($exceptionMessage, Project::MSG_ERR);
+            throw new BuildException($exceptionMessage);
         }
     }
 
