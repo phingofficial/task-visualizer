@@ -26,9 +26,13 @@ use Phing\Io\FileReader;
 use Phing\Io\FileWriter;
 use Phing\Io\File;
 use Phing\Project;
+use Psr\Http\Message\ResponseInterface;
+use SimpleXMLElement;
+use XSLTProcessor;
 use function array_reduce;
 use function Jawira\PlantUml\encodep;
 use function reset;
+use function simplexml_load_string;
 
 /**
  * Class VisualizerTask
@@ -39,15 +43,15 @@ use function reset;
  */
 class VisualizerTask extends HttpTask
 {
-    public const FORMAT_EPS = 'eps';
-    public const FORMAT_PNG = 'png';
+    public const FORMAT_EPS  = 'eps';
+    public const FORMAT_PNG  = 'png';
     public const FORMAT_PUML = 'puml';
-    public const FORMAT_SVG = 'svg';
-    public const SERVER = 'http://www.plantuml.com/plantuml';
-    public const STATUS_OK = 200;
-    public const XSL_CALLS = __DIR__ . '/calls.xsl';
-    public const XSL_FOOTER = __DIR__ . '/footer.xsl';
-    public const XSL_HEADER = __DIR__ . '/header.xsl';
+    public const FORMAT_SVG  = 'svg';
+    public const SERVER      = 'http://www.plantuml.com/plantuml';
+    public const STATUS_OK   = 200;
+    public const XSL_CALLS   = __DIR__ . '/calls.xsl';
+    public const XSL_FOOTER  = __DIR__ . '/footer.xsl';
+    public const XSL_HEADER  = __DIR__ . '/header.xsl';
     public const XSL_TARGETS = __DIR__ . '/targets.xsl';
 
     /**
@@ -74,10 +78,10 @@ class VisualizerTask extends HttpTask
         if (!function_exists('\Jawira\PlantUml\encodep')) {
             $exceptionMessage = get_class($this) . ' requires "jawira/plantuml-encoding" library';
         }
-        if (!class_exists(\XSLTProcessor::class)) {
+        if (!class_exists(XSLTProcessor::class)) {
             $exceptionMessage = get_class($this) . ' requires XSL extension';
         }
-        if (!class_exists(\SimpleXMLElement::class)) {
+        if (!class_exists(SimpleXMLElement::class)) {
             $exceptionMessage = get_class($this) . ' requires SimpleXML extension';
         }
         if (isset($exceptionMessage)) {
@@ -98,8 +102,8 @@ class VisualizerTask extends HttpTask
     {
         $pumlDiagram = $this->generatePumlDiagram();
         $destination = $this->resolveImageDestination();
-        $format = $this->getFormat();
-        $image = $this->generateImage($pumlDiagram, $format);
+        $format      = $this->getFormat();
+        $image       = $this->generateImage($pumlDiagram, $format);
         $this->saveToFile($image, $destination);
     }
 
@@ -113,8 +117,8 @@ class VisualizerTask extends HttpTask
         /**
          * @var \Phing\Parser\XmlContext $xmlContext
          */
-        $xmlContext = $this->getProject()
-            ->getReference("phing.parsing.context");
+        $xmlContext  = $this->getProject()
+                            ->getReference("phing.parsing.context");
         $importStack = $xmlContext->getImportStack();
         return $this->generatePuml($importStack);
     }
@@ -136,12 +140,12 @@ class VisualizerTask extends HttpTask
 
         $puml = $this->transformToPuml($firstBuildFile, VisualizerTask::XSL_HEADER);
 
-        $puml = array_reduce($buildFiles, function (\Phing\Io\File $buildFile) {
-            return $this->transformToPuml($buildFile, VisualizerTask::XSL_CALLS);
+        $puml = array_reduce($buildFiles, function (string $carry, File $buildFile) {
+            return $carry . $this->transformToPuml($buildFile, VisualizerTask::XSL_CALLS);
         }, $puml);
 
-        $puml = array_reduce($buildFiles, function (\Phing\Io\File $buildFile) {
-            return $this->transformToPuml($buildFile, VisualizerTask::XSL_TARGETS);
+        $puml = array_reduce($buildFiles, function (string $carry, File $buildFile) {
+            return $carry . $this->transformToPuml($buildFile, VisualizerTask::XSL_TARGETS);
         }, $puml);
 
         $puml .= $this->transformToPuml($firstBuildFile, VisualizerTask::XSL_FOOTER);
@@ -153,7 +157,7 @@ class VisualizerTask extends HttpTask
      * Transforms buildfile using provided xsl file
      *
      * @param \Phing\Io\File $buildfile Path to buildfile
-     * @param string $xslFile XSLT file
+     * @param string         $xslFile   XSLT file
      *
      * @return string
      */
@@ -162,7 +166,7 @@ class VisualizerTask extends HttpTask
         $xml = $this->loadXmlFile($buildfile->getPath());
         $xsl = $this->loadXmlFile($xslFile);
 
-        $processor = new \XSLTProcessor();
+        $processor = new XSLTProcessor();
         $processor->importStylesheet($xsl);
 
         return $processor->transformToXml($xml) . PHP_EOL;
@@ -175,12 +179,12 @@ class VisualizerTask extends HttpTask
      *
      * @return \SimpleXMLElement
      */
-    protected function loadXmlFile(string $xmlFile): \SimpleXMLElement
+    protected function loadXmlFile(string $xmlFile): SimpleXMLElement
     {
         $xmlContent = (new FileReader($xmlFile))->read();
-        $xml = simplexml_load_string($xmlContent);
+        $xml        = simplexml_load_string($xmlContent);
 
-        if (!($xml instanceof \SimpleXMLElement)) {
+        if (!($xml instanceof SimpleXMLElement)) {
             $exceptionMessage = "Error loading XML file: $xmlFile";
             $this->log($exceptionMessage, Project::MSG_ERR);
             throw new BuildException($exceptionMessage);
@@ -198,9 +202,9 @@ class VisualizerTask extends HttpTask
     protected function resolveImageDestination(): File
     {
         $phingFile = $this->getProject()->getProperty('phing.file');
-        $format = $this->getFormat();
+        $format    = $this->getFormat();
         $candidate = $this->getDestination();
-        $path = $this->resolveDestination($phingFile, $format, $candidate);
+        $path      = $this->resolveDestination($phingFile, $format, $candidate);
 
         return new File($path);
     }
@@ -218,7 +222,7 @@ class VisualizerTask extends HttpTask
      *
      * @param string $format
      *
-     * @return VisualizerTask
+     * @return \Phing\Task\Ext\VisualizerTask
      */
     public function setFormat(string $format): VisualizerTask
     {
@@ -249,7 +253,7 @@ class VisualizerTask extends HttpTask
     /**
      * @param string $destination
      *
-     * @return VisualizerTask
+     * @return \Phing\Task\Ext\VisualizerTask
      */
     public function setDestination(?string $destination): VisualizerTask
     {
@@ -261,9 +265,9 @@ class VisualizerTask extends HttpTask
     /**
      * Figure diagram's file path
      *
-     * @param string $buildfilePath Path to main buildfile
-     * @param string $format Extension to use
-     * @param null|string $destination Desired destination provided by user
+     * @param string      $buildfilePath Path to main buildfile
+     * @param string      $format        Extension to use
+     * @param null|string $destination   Desired destination provided by user
      *
      * @return string
      */
@@ -308,7 +312,7 @@ class VisualizerTask extends HttpTask
             return $pumlDiagram;
         }
 
-        $format = $this->getFormat();
+        $format      = $this->getFormat();
         $encodedPuml = encodep($pumlDiagram);
         $this->prepareImageUrl($format, $encodedPuml);
 
@@ -352,7 +356,7 @@ class VisualizerTask extends HttpTask
     /**
      * @param string $server
      *
-     * @return VisualizerTask
+     * @return \Phing\Task\Ext\VisualizerTask
      */
     public function setServer(string $server): VisualizerTask
     {
@@ -370,9 +374,9 @@ class VisualizerTask extends HttpTask
      *
      * @return void
      */
-    protected function processResponse(\Psr\Http\Message\ResponseInterface $response): void
+    protected function processResponse(ResponseInterface $response): void
     {
-        $status = $response->getStatusCode();
+        $status       = $response->getStatusCode();
         $reasonPhrase = $response->getReasonPhrase();
         $this->log("Response status: $status", Project::MSG_DEBUG);
         $this->log("Response reason: $reasonPhrase", Project::MSG_DEBUG);
@@ -387,7 +391,7 @@ class VisualizerTask extends HttpTask
     /**
      * Save provided $content string into $destination file
      *
-     * @param string $content Content to save
+     * @param string         $content     Content to save
      * @param \Phing\Io\File $destination Location where $content is saved
      *
      * @return void
