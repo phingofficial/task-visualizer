@@ -160,6 +160,7 @@ class VisualizerTask extends HttpTask
      * @param string         $xslFile   XSLT file
      *
      * @return string
+     * @throws \Phing\Io\IOException
      */
     protected function transformToPuml(File $buildfile, string $xslFile): string
     {
@@ -178,6 +179,7 @@ class VisualizerTask extends HttpTask
      * @param string $xmlFile XML or XSLT file
      *
      * @return \SimpleXMLElement
+     * @throws \Phing\Io\IOException
      */
     protected function loadXmlFile(string $xmlFile): SimpleXMLElement
     {
@@ -251,7 +253,7 @@ class VisualizerTask extends HttpTask
     }
 
     /**
-     * @param string $destination
+     * @param null|string $destination
      *
      * @return \Phing\Task\Ext\VisualizerTask
      */
