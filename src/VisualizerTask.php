@@ -60,7 +60,7 @@ class VisualizerTask extends HttpTask
     protected $format;
 
     /**
-     * @var string Location in disk where diagram is saved
+     * @var null|string Location in disk where diagram is saved
      */
     protected $destination;
 
