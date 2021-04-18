@@ -314,9 +314,7 @@ class VisualizerTask extends HttpTask
             return $pumlDiagram;
         }
 
-        $format = $this->getFormat();
-        $this->prepareImageUrl($pumlDiagram, $format);
-
+        $this->prepareImageUrl($pumlDiagram, $this->getFormat());
         $response = $this->request();
         $this->processResponse($response); // used for status validation
 
