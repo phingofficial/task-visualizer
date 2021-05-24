@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<project name="VisualizerTask" default="help">
+<project name="VisualizerTask" description="Create a diagram from buildfile" default="help">
 
     <target name="setup" depends="composer:install"
             description="Prepare project for development"/>
@@ -8,7 +8,8 @@
             depends="composer:normalize,composer:validate,phpstan:analyse"/>
 
     <target name="visualizer" description="Create buildfile diagram">
-        <visualizer format="png"/>
+        <visualizer format="puml" showTitle="true" showDescription="true" footer="Visit https://www.phing.info/"/>
+        <visualizer format="png" showTitle="true" showDescription="true" footer="Visit https://www.phing.info/"/>
     </target>
 
     <target name="help" depends="visualizer">
