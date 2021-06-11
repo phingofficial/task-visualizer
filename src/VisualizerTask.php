@@ -198,7 +198,7 @@ class VisualizerTask extends HttpTask
 
         $processor = new XSLTProcessor();
         $processor->setParameter('', 'direction', $this->getDirection());
-        $processor->setParameter('', 'description', $this->getProject()->getDescription());
+        $processor->setParameter('', 'description', strval($this->getProject()->getDescription()));
         $processor->setParameter('', 'showTitle', strval($this->isShowTitle()));
         $processor->setParameter('', 'showDescription', strval($this->isShowDescription()));
         $processor->setParameter('', 'footer', $this->getFooter());
