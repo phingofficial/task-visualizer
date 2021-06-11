@@ -8,8 +8,16 @@
             depends="composer:normalize,composer:validate,phpstan:analyse"/>
 
     <target name="visualizer" description="Create buildfile diagram">
-        <visualizer format="puml" showTitle="true" showDescription="true" footer="Visit https://www.phing.info/"/>
-        <visualizer format="png" showTitle="true" showDescription="true" footer="Visit https://www.phing.info/"/>
+        <uptodate property="visualizer.run" srcfile="build.xml" targetfile="build.png"/>
+        <if>
+            <istrue value="${visualizer.run}"/>
+            <then>
+                <visualizer format="puml" showTitle="true" showDescription="true"
+                            footer="Visit https://www.phing.info/"/>
+                <visualizer format="png" showTitle="true" showDescription="true"
+                            footer="Visit https://www.phing.info/"/>
+            </then>
+        </if>
     </target>
 
     <target name="help" depends="visualizer">
@@ -45,7 +53,9 @@
         </exec>
     </target>
 
-    <target name="guide:parse" description="Generate doc (dev only)">
+    <target name="guide:preview" description="Generate doc (dev only)">
+        <!-- http://tutoriels.meddeb.net/docbook-installation-utilisation-de-base/ -->
+        <!-- apt install xsltproc docbook-xsl -->
         <!-- I use this Target to have a documentation preview -->
         <exec executable="xsltproc" passthru="true" checkreturn="true">
             <arg value="--output"/>
@@ -53,6 +63,9 @@
             <arg value="--xinclude"/>
             <arg file="/usr/share/xml/docbook/stylesheet/nwalsh/xhtml/docbook.xsl"/>
             <arg file="docs/guide.xml"/>
+        </exec>
+        <exec executable="xdg-open" spawn="true">
+            <arg value="docs/guide.html"/>
         </exec>
     </target>
 
