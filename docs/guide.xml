@@ -216,8 +216,8 @@
             </listitem>
             <listitem>
                 <para>
-                    <link xlink:href="https://packagist.org/packages/jawira/plantuml-encoding" role="extern">
-                        jawira/plantuml-encoding
+                    <link xlink:href="https://packagist.org/packages/jawira/plantuml-client" role="extern">
+                        jawira/plantuml-client
                     </link>
                 </para>
             </listitem>

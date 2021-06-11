@@ -17,9 +17,6 @@
     "php": "^7.3 || ^7.4 || ^8.0",
     "jawira/plantuml-client": "^1.0"
   },
-  "replace": {
-    "phing/task-visualizer": "*"
-  },
   "require-dev": {
     "ext-simplexml": "*",
     "ext-xsl": "*",

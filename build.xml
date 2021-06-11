@@ -8,9 +8,11 @@
             depends="composer:normalize,composer:validate,phpstan:analyse"/>
 
     <target name="visualizer" description="Create buildfile diagram">
-        <uptodate property="visualizer.run" srcfile="build.xml" targetfile="build.png"/>
+        <uptodate property="visualizer.uptodate" srcfile="build.xml" targetfile="build.png"/>
         <if>
-            <istrue value="${visualizer.run}"/>
+            <not>
+                <isset property="visualizer.uptodate"/>
+            </not>
             <then>
                 <visualizer format="puml" showTitle="true" showDescription="true"
                             footer="Visit https://www.phing.info/"/>
@@ -32,11 +34,9 @@
 
     <target name="composer:install" description="Install Composer dependencies">
         <composer command="install">
-            <arg value="--dev"/>
             <arg value="--prefer-dist"/>
             <arg value="--no-interaction"/>
             <arg value="--no-progress"/>
-            <arg value="--no-suggest"/>
             <arg value="--ansi"/>
         </composer>
     </target>
